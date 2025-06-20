@@ -7,15 +7,17 @@
 #
 
 import socket
+import datetime
+
 from scapy.supersocket import StreamSocket
 from scapy.layers.http import *
 
-IP="127.0.0.1"
+IP="0.0.0.0"
 INTERFACE="lo"
 PORT=8080
 
 
-def handle_client(conn):
+def handle_client(host, port, conn):
 
     scapy_sock = StreamSocket(conn, HTTP)
     while True:
@@ -28,7 +30,10 @@ def handle_client(conn):
         except ConnectionResetError:
             break
 
-        if req["HTTP"].Path == b"/double":
+        path = req["HTTP"].Path.decode()
+        print(f"[{datetime.datetime.now()}]  {host} {port} {path}")
+
+        if path == "/double":
 
             res1 = HTTP() / HTTPResponse() / "You've triggered a double-response attack.\n"
             res2 = HTTP() / HTTPResponse(Status_Code="403") / "Hard times have befallen you.\n"
@@ -39,7 +44,7 @@ def handle_client(conn):
                 scapy_sock.close()
                 break
 
-        if req["HTTP"].Path == b"/partial":
+        if path == "/partial":
 
             res1 = HTTP() / HTTPResponse() / "This body isn't even transferred.\n"
 
@@ -47,15 +52,15 @@ def handle_client(conn):
             res1["HTTP"].Content_Length = "1337"
             res1["HTTP"].X_Powered_By="This response was incomplete..."
 
-            res1.show()
-            print(bytes(res1).decode())
+            #res1.show()
+            #print(bytes(res1).decode())
 
             # Remove the delimiter and the body, leaving only the (unfinished) header block
             partial_res = bytes(res1)
             cutoff = partial_res.index(b"\r\n\r\n")
             partial_res = partial_res[:cutoff]
 
-            print(partial_res.decode())
+            #print(partial_res.decode())
 
             try:
                 scapy_sock.send(partial_res)
@@ -65,7 +70,7 @@ def handle_client(conn):
             scapy_sock.close()
             break
 
-        elif req["HTTP"].Path == b"/":
+        elif path == "/":
 
             res1 = HTTP() / HTTPResponse() / "OK, here's your content. Try /double or /partial for some more fun.\n"
 
@@ -89,16 +94,17 @@ def handle_client(conn):
 
 def raw_socket_server():
 
-	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-	server.bind((IP, PORT))
-	server.listen(1)
+    server.bind((IP, PORT))
+    server.listen(1)
 
-	while True:
-	    conn, addr = server.accept()
-	    print(f"Connection from {addr}")
-	    handle_client(conn)
+    while True:
+        conn, addr = server.accept()
+        host, port = addr
+        print(f"Connection from {addr}")
+        handle_client(host, port, conn)
 
 
 raw_socket_server()
