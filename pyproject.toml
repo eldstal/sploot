@@ -1,0 +1,7 @@
+[project]
+name = "sploot"
+version = "0.1"
+dependencies = [
+    "requests",
+    "scapy>=2.6",
+]
