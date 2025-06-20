@@ -1,4 +1,10 @@
 #!/bin/env python3
+#
+# Sets up an HTTP server with various erroneous response patterns
+#
+# Request /double to get two responses
+# Request /partial to get an incomplete response
+#
 
 import socket
 from scapy.supersocket import StreamSocket
@@ -22,10 +28,10 @@ def handle_client(conn):
         except ConnectionResetError:
             break
 
-        if req["HTTP"].Path == b"/trigger":
+        if req["HTTP"].Path == b"/double":
 
-            res1 = HTTP() / HTTPResponse() / "You've triggered an attack.\n"
-            res2 = HTTP() / HTTPResponse() / "This wasn't meant for anyone.\n"
+            res1 = HTTP() / HTTPResponse() / "You've triggered a double-response attack.\n"
+            res2 = HTTP() / HTTPResponse(Status_Code="403") / "Hard times have befallen you.\n"
 
             try:
                 scapy_sock.send(bytes(res1) + bytes(res2))
@@ -33,9 +39,35 @@ def handle_client(conn):
                 scapy_sock.close()
                 break
 
+        if req["HTTP"].Path == b"/partial":
+
+            res1 = HTTP() / HTTPResponse() / "This body isn't even transferred.\n"
+
+            # Suggest a longer body, in case we can steal someone else's response
+            res1["HTTP"].Content_Length = "1337"
+            res1["HTTP"].X_Powered_By="This response was incomplete..."
+
+            res1.show()
+            print(bytes(res1).decode())
+
+            # Remove the delimiter and the body, leaving only the (unfinished) header block
+            partial_res = bytes(res1)
+            cutoff = partial_res.index(b"\r\n\r\n")
+            partial_res = partial_res[:cutoff]
+
+            print(partial_res.decode())
+
+            try:
+                scapy_sock.send(partial_res)
+            except:
+                pass
+
+            scapy_sock.close()
+            break
+
         elif req["HTTP"].Path == b"/":
 
-            res1 = HTTP() / HTTPResponse() / "OK, here's your content. Try /trigger for some more fun.\n"
+            res1 = HTTP() / HTTPResponse() / "OK, here's your content. Try /double or /partial for some more fun.\n"
 
             try:
                 scapy_sock.send(bytes(res1))
