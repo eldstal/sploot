@@ -8,6 +8,7 @@
 
 import socket
 import datetime
+from threading import Thread
 
 from scapy.supersocket import StreamSocket
 from scapy.layers.http import *
@@ -102,7 +103,10 @@ def raw_socket_server():
         conn, addr = server.accept()
         host, port = addr
         print(f"Connection from {addr}")
-        handle_client(host, port, conn)
+
+        t = Thread(target=handle_client, args=(host, port, conn))
+        t.start()
+        #handle_client(host, port, conn)
 
 
 raw_socket_server()

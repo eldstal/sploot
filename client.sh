@@ -22,11 +22,11 @@ function keep_trying {
 
 
 if [ "$KIND" == "double" ]; then
-    keep_trying "http://${HOST}/double" "triggered a double-response attack"
+    keep_trying "https://${HOST}/double" "triggered a double-response attack"
 
 elif [ "$KIND" == "partial" ]; then
-    keep_trying "http://${HOST}/partial" "triggered a partial response"
+    keep_trying "https://${HOST}/partial" "triggered a partial response"
 
 else
-    keep_trying "http://${HOST}/" "here's your content"
+    keep_trying "https://${HOST}/" "here's your content"
 fi
