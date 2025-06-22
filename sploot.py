@@ -80,7 +80,7 @@ def handle_client(host, port, conn):
                 break
         else:
 
-            print("404!")
+            print(f"404! \"{path}\"")
             req.show()
 
             res1 = HTTP() / HTTPResponse(Status_Code="404", Reason_Phrase="Not found") / "Not here.\n"
