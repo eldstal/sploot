@@ -46,24 +46,22 @@ def handle_client(host, port, conn):
 
         if path == "/partial":
 
-            res1 = HTTP() / HTTPResponse() / "This body isn't even transferred.\n"
+            res1 = HTTP() / HTTPResponse() / "You've triggered a partial response.\n"
+            res2 = HTTP() / HTTPResponse() / "This body isn't even transferred.\n"
 
             # Suggest a longer body, in case we can steal someone else's response
-            res1["HTTP"].Content_Length = "1337"
-            res1["HTTP"].X_Powered_By="This response was incomplete..."
-
-            #res1.show()
-            #print(bytes(res1).decode())
+            res2["HTTP"].Content_Length = "1337"
+            res2["HTTP"].X_Powered_By="This response was incomplete..."
 
             # Remove the delimiter and the body, leaving only the (unfinished) header block
-            partial_res = bytes(res1)
+            partial_res = bytes(res2)
             cutoff = partial_res.index(b"\r\n\r\n")
             partial_res = partial_res[:cutoff]
 
             #print(partial_res.decode())
 
             try:
-                scapy_sock.send(partial_res)
+                scapy_sock.send(bytes(res1) + partial_res)
             except:
                 pass
 
