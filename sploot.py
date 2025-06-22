@@ -37,7 +37,7 @@ def handle_client(host, port, conn):
         if path == "/double":
 
             res1 = HTTP() / HTTPResponse() / "You've triggered a double-response attack.\n"
-            res2 = HTTP() / HTTPResponse(Status_Code="403") / "Hard times have befallen you.\n"
+            res2 = HTTP() / HTTPResponse() / "Hard times have befallen you.\n"
 
             try:
                 scapy_sock.send(bytes(res1) + bytes(res2))
@@ -45,7 +45,7 @@ def handle_client(host, port, conn):
                 scapy_sock.close()
                 break
 
-        if path == "/partial":
+        elif path == "/partial":
 
             res1 = HTTP() / HTTPResponse() / "You've triggered a partial response.\n"
             res2 = HTTP() / HTTPResponse() / "This body isn't even transferred.\n"
@@ -58,8 +58,6 @@ def handle_client(host, port, conn):
             partial_res = bytes(res2)
             cutoff = partial_res.index(b"\r\n\r\n")
             partial_res = partial_res[:cutoff]
-
-            #print(partial_res.decode())
 
             try:
                 scapy_sock.send(bytes(res1) + partial_res)
