@@ -17,6 +17,8 @@ IP="0.0.0.0"
 INTERFACE="lo"
 PORT=8080
 
+KEEPALIVE="timeout=600, max=0"
+
 
 def handle_client(host, port, conn):
 
@@ -36,8 +38,8 @@ def handle_client(host, port, conn):
 
         if path == "/double":
 
-            res1 = HTTP() / HTTPResponse() / "You've triggered a double-response attack.\n"
-            res2 = HTTP() / HTTPResponse() / "Hard times have befallen you.\n"
+            res1 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "You've triggered a double-response attack.\n"
+            res2 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "Hard times have befallen you.\n"
 
             try:
                 scapy_sock.send(bytes(res1) + bytes(res2))
@@ -47,8 +49,8 @@ def handle_client(host, port, conn):
 
         elif path == "/partial":
 
-            res1 = HTTP() / HTTPResponse() / "You've triggered a partial response.\n"
-            res2 = HTTP() / HTTPResponse() / "This body isn't even transferred.\n"
+            res1 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "You've triggered a partial response.\n"
+            res2 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "This body isn't even transferred.\n"
 
             # Suggest a longer body, in case we can steal someone else's response
             res2["HTTP"].Content_Length = "1337"
@@ -69,7 +71,7 @@ def handle_client(host, port, conn):
 
         elif path == "/":
 
-            res1 = HTTP() / HTTPResponse() / "OK, here's your content. Try /double or /partial for some more fun.\n"
+            res1 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "OK, here's your content. Try /double or /partial for some more fun.\n"
 
             try:
                 scapy_sock.send(bytes(res1))
@@ -81,7 +83,7 @@ def handle_client(host, port, conn):
             print(f"404! \"{path}\"")
             req.show()
 
-            res1 = HTTP() / HTTPResponse(Status_Code="404", Reason_Phrase="Not found") / "Not here.\n"
+            res1 = HTTP() / HTTPResponse(Status_Code="404", Reason_Phrase="Not found", Keep_Alive=KEEPALIVE) / "Not here.\n"
 
             try:
                 scapy_sock.send(res1)
