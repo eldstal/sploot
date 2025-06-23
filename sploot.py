@@ -42,7 +42,9 @@ def handle_client(host, port, conn):
             res2 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "Hard times have befallen you.\n"
 
             try:
-                scapy_sock.send(bytes(res1) + bytes(res2))
+                #scapy_sock.send(bytes(res1) + bytes(res2))
+                scapy_sock.send(bytes(res1))
+                scapy_sock.send(bytes(res2))
             except:
                 scapy_sock.close()
                 break
