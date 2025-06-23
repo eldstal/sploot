@@ -10,11 +10,13 @@ function usage() {
 
 function keep_trying {
     URL=$1
-    NORMAL_REGEX=$2
+    PREFIX_REGEX=$2
     COUNT=${3:--1}
     while [ $COUNT -ne 0 ]; do
-        sleep 0.5
-        curl --http1.1 --silent "${URL}" "${URL}" "${URL}" | grep -v -E "${NORMAL_REGEX}"
+        sleep 0.1
+        local PARAM=$RANDOM
+        #curl --http1.1 --silent "${URL}" "${URL}" "${URL}" | grep -v -E "${NORMAL_REGEX}"
+        curl --http1.1 --silent "${URL}?${PARAM}" | grep -v -E "${NORMAL_REGEX}=${PARAM}"
 
         let COUNT=${COUNT}-1
     done
@@ -26,11 +28,11 @@ function keep_trying {
 
 
 if [ "$KIND" == "double" ]; then
-    keep_trying "${URL}/double" "triggered a double-response attack" 1
+    keep_trying "${URL}/double" "First" -1
 
 elif [ "$KIND" == "partial" ]; then
-    keep_trying "${URL}/partial" "triggered a partial response" -1
+    keep_trying "${URL}/partial" "First" -1
 
 else
-    keep_trying "${URL}/" "here's your content"
+    keep_trying "${URL}/" "Normal"
 fi

